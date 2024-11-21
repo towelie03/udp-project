@@ -10,8 +10,8 @@ BUFFER_SIZE = 1024  # bytes
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Client-server application using UDP sockets over the network")
-    parser.add_argument('-i', '--ip', type=ipaddress.ip_address, help="Accepts the IP to connect to", required=True)
-    parser.add_argument('-p', '--port', type=int, required=True, help="Accepts the port to connect to")
+    parser.add_argument('-i', '--target-ip', type=ipaddress.ip_address, help="Accepts the IP to connect to", required=True)
+    parser.add_argument('-p', '--target-port', type=int, required=True, help="Accepts the port to connect to")
     parser.add_argument('-t', '--timeout', type=int, required=True, help="Timeout in seconds")
     return parser.parse_args()
 
@@ -89,7 +89,7 @@ def run_client(target_ip, target_port, timeout):
 
 def main():
     args = parse_args()
-    run_client(args.ip, args.port, args.timeout)
+    run_client(args.target_ip, args.target_port, args.timeout)
 
 if __name__ == "__main__":
     main()

@@ -11,9 +11,10 @@ BUFFER_SIZE = 1024  # bytes
 MESSAGE_ID_TTL = 600  # Time-to-live for message IDs in seconds (e.g., 10 minutes)
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Client-server application using UDP sockets over the network")
-    parser.add_argument('-i', '--ip', type=ipaddress.ip_address, help="Accepts the IP to listen on (default: 0.0.0.0)", default='0.0.0.0')
-    parser.add_argument('-p', '--port', type=int, required=True, help="Accepts the port to listen on")
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description='UDP Reliable Server')
+    parser.add_argument('--listen-ip', required=True, help='IP address to bind the server.')
+    parser.add_argument('--listen-port', type=int, required=True, help='Port number to listen on.')
     return parser.parse_args()
 
 def create_socket(listen_ip, listen_port):
@@ -104,13 +105,6 @@ def run_server(listen_ip, listen_port):
                 print(f"Missing fields in message from {client_addr}, ignoring.")
 
     sock.close()
-
-def parse_arguments():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description='UDP Reliable Server')
-    parser.add_argument('--listen-ip', required=True, help='IP address to bind the server.')
-    parser.add_argument('--listen-port', type=int, required=True, help='Port number to listen on.')
-    return parser.parse_args()
 
 def main():
     args = parse_args()
