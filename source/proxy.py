@@ -179,14 +179,13 @@ def handle_packet(data, addr, server_address, proxy_socket, args, message_id_to_
     else:
         handle_client_packet(data, addr, server_address, proxy_socket, args, message_id_to_client, message_id_lock)
 
-def cleanup_mappings(message_id_to_client, message_id_lock, timeout=600, cleanup_interval=60):
-    """Periodically remove stale message_id mappings to prevent memory leaks."""
-    while True:
+def cleanup_mappings(message_id_to_client, message_id_lock, timeout=600, cleanup_interval=60, shutdown_event=None):
+    while not shutdown_event.is_set():
         time.sleep(cleanup_interval)
         current_time = time.time()
         with message_id_lock:
             stale_ids = [mid for mid, (addr, timestamp) in message_id_to_client.items()
-                        if current_time - timestamp > timeout]
+                         if current_time - timestamp > timeout]
             for mid in stale_ids:
                 del message_id_to_client[mid]
                 print(f"Cleaned up stale message_id {mid}")
@@ -204,6 +203,7 @@ def main():
 
     # List to keep track of worker threads
     worker_threads = []
+    
     # Event to signal shutdown
     shutdown_event = threading.Event()
 

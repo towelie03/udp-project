@@ -72,8 +72,10 @@ def run_client(target_ip, target_port, timeout):
         'message_id': message_id,
         'content': user_message
     })
-
-    while True:
+    MAX_RETRIES = 5
+    retries = 0
+    
+    while retries<MAX_RETRIES:
         send_message(sock, message_payload, target_addr)
         print("Message sent, waiting for ACK...")
 
@@ -83,7 +85,11 @@ def run_client(target_ip, target_port, timeout):
             break
         else:
             print("Retransmitting message...")
-
+            
+    if retries == MAX_RETRIES:
+        print("Failed to receive ACK after maximum retries. Exiting.")
+        
+        
     sock.close()
 
 

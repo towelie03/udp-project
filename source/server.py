@@ -9,7 +9,7 @@ import ipaddress
 
 BUFFER_SIZE = 1024  # bytes
 MESSAGE_ID_TTL = 600  # Time-to-live for message IDs in seconds (e.g., 10 minutes)
-
+CLEANING_PERIOD = 60
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description='UDP Reliable Server')
@@ -49,66 +49,73 @@ def send_ack(sock, addr, message_id):
     except socket.error as e:
         print(f"Failed to send ACK: {e}")
 
-def cleanup_expired_message_ids(client_messages):
+def cleanup_expired_message_ids(client_messages, shutdown_event):
     """Periodically remove expired message IDs."""
-    while True:
+    while not shutdown_event.is_set():
         current_time = time.time()
         for client_addr in list(client_messages.keys()):
             message_ids = client_messages[client_addr]
-            # Remove expired message IDs
             message_ids[:] = [
                 (msg_id, timestamp) for msg_id, timestamp in message_ids
                 if current_time - timestamp < MESSAGE_ID_TTL
             ]
-            # Remove client entry if no message IDs remain
             if not message_ids:
                 del client_messages[client_addr]
-        time.sleep(60)  # Sleep for 60 seconds before next cleanup
+        shutdown_event.wait(CLEANING_PERIOD)  # Sleep for 60 seconds or until shutdown_event is set
 
-def run_server(listen_ip, listen_port):
+
+def run_server(listen_ip, listen_port, shutdown_event):
     """Main server logic."""
     sock = create_socket(listen_ip, listen_port)
-    client_messages = {}  # Dictionary to track message IDs and their timestamps per client
+    client_messages = {}
 
     # Start the cleanup thread
-    cleanup_thread = threading.Thread(target=cleanup_expired_message_ids, args=(client_messages,))
+    cleanup_thread = threading.Thread(
+        target=cleanup_expired_message_ids, args=(client_messages, shutdown_event)
+    )
     cleanup_thread.daemon = True
     cleanup_thread.start()
 
-    while True:
-        message_str, client_addr = receive_message(sock)
-        if message_str:
-            try:
-                # Parse the JSON message
-                message_data = json.loads(message_str)
-                message_id = message_data['message_id']
-                content = message_data['content']
+    try:
+        while not shutdown_event.is_set():
+            message_str, client_addr = receive_message(sock)
+            if message_str:
+                try:
+                    message_data = json.loads(message_str)
+                    message_id = message_data['message_id']
+                    content = message_data['content']
 
-                # Get or create the list of message IDs for this client
-                message_ids = client_messages.setdefault(client_addr, [])
+                    message_ids = client_messages.setdefault(client_addr, [])
 
-                # Check if the message ID is already processed
-                if not any(msg_id == message_id for msg_id, _ in message_ids):
-                    print(f"Received new message from {client_addr}: {content}")
-                    # Add message ID with current timestamp
-                    message_ids.append((message_id, time.time()))
-                    # Process the message here (e.g., save to database)
-                else:
-                    print(f"Duplicate message from {client_addr} (ID {message_id}), ignoring.")
+                    if not any(msg_id == message_id for msg_id, _ in message_ids):
+                        print(f"Received new message from {client_addr}: {content}")
+                        message_ids.append((message_id, time.time()))
+                    else:
+                        print(f"Duplicate message from {client_addr} (ID {message_id}), ignoring.")
 
-                # Send ACK with message_id
-                send_ack(sock, client_addr, message_id)
+                    send_ack(sock, client_addr, message_id)
+                except json.JSONDecodeError:
+                    print(f"Invalid JSON message from {client_addr}, ignoring.")
+                except KeyError:
+                    print(f"Missing fields in message from {client_addr}, ignoring.")
+    finally:
+        shutdown_event.set()  # Signal threads to stop
+        cleanup_thread.join()  # Wait for the cleanup thread to finish
+        sock.close()
+        print("Server shut down gracefully.")
 
-            except json.JSONDecodeError:
-                print(f"Invalid JSON message from {client_addr}, ignoring.")
-            except KeyError:
-                print(f"Missing fields in message from {client_addr}, ignoring.")
-
-    sock.close()
 
 def main():
     args = parse_args()
-    run_server(args.ip, args.port)
+    
+    # Event to signal shutdown
+    shutdown_event = threading.Event()
+    try:
+        run_server(args.listen_ip, args.listen_port, shutdown_event)
+    except KeyboardInterrupt:
+        print("\nShutdown signal received.")
+        shutdown_event.set()  # Signal shutdown to threads
+        
 
 if __name__ == "__main__":
     main()
