@@ -87,11 +87,11 @@ def simulate_drop(probability):
     """Determine whether to drop a packet based on the given probability."""
     return random.uniform(0, 100) < probability
 
-def simulate_delay(probability, delay_time_range):
+def simulate_delay(probability, delay_time_range, addr):
     """Simulate delay based on the given probability and delay time range."""
     if random.uniform(0, 100) < probability:
         delay = random.uniform(*delay_time_range)
-        print(f"Delaying packet by {delay * 1000:.2f} ms")
+        print(f"Delaying packet from {addr} by {delay * 1000:.2f} ms")
         time.sleep(delay)
         return delay
     return 0
@@ -118,7 +118,7 @@ def handle_client_packet(data, client_address, server_address, proxy_socket, arg
         return
 
     # Simulate delay
-    simulate_delay(args.client_delay, args.client_delay_time)
+    simulate_delay(args.client_delay, args.client_delay_time,client_address)
 
     # Parse the packet to extract message_id
     message_id = parse_packet(data, client_address, role='client')
@@ -144,7 +144,7 @@ def handle_server_packet(data, server_address, proxy_socket, message_id_to_clien
         return
 
     # Simulate delay
-    simulate_delay(args.server_delay, args.server_delay_time)
+    simulate_delay(args.server_delay, args.server_delay_time,server_address)
 
     # Parse the packet to extract message_id
     message_id = parse_packet(data, server_address, role='server')
