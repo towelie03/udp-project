@@ -1,10 +1,12 @@
 import socket
 import argparse
 import sys
+import json
+import uuid
+import select
 import ipaddress
-import time
 
-LINE_LEN = 4096
+BUFFER_SIZE = 1024  # bytes
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Client-server application using UDP sockets over the network")
@@ -13,55 +15,81 @@ def parse_args():
     parser.add_argument('-t', '--timeout', type=int, required=True, help="Timeout in seconds")
     return parser.parse_args()
 
-def connect_to_server(HOST, PORT):
-    connection = (HOST, PORT)
+def create_socket():
+    """Create a UDP socket."""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        print(f"Socket created and connected to {HOST}:{PORT}")
-        return sock, connection
-    except Exception as e:
-        print(f"Error: Unable to create server socket: {e}")
+        return sock
+    except socket.error as e:
+        print(f"Failed to create socket: {e}")
         sys.exit(1)
 
-def send_message(sock, connection, message, timeout):
+def send_message(sock, message, addr):
+    """Send a message to the specified address."""
     try:
-        sock.sendto(message.encode('utf-8'), connection)
-        sock.settimeout(timeout)
-        try:
-            ack, _ = sock.recvfrom(LINE_LEN)
-            if ack.decode('utf-8') == "ACK":
-                print("Acknowledgment received")
+        sock.sendto(message.encode(), addr)
+        print(f"Message sent to {addr}")
+    except socket.error as e:
+        print(f"Failed to send message: {e}")
+        sys.exit(1)
+
+def receive_ack(sock, timeout, message_id):
+    """Wait for an acknowledgment with a timeout using select."""
+    try:
+        # Prepare to use select
+        readable, _, _ = select.select([sock], [], [], timeout)
+        if readable:
+            data, _ = sock.recvfrom(BUFFER_SIZE)
+            ack_data = data.decode()
+            ack_message = json.loads(ack_data)
+            if ack_message.get('status') == 'ACK' and ack_message.get('message_id') == message_id:
                 return True
-        except socket.timeout:
-            print("Timeout: No acknowledgment received, retrying...")
+            elif ack_message.get('status') == 'ACK':
+                print(f"Received ACK with incorrect message_id: {ack_message.get('message_id')}")
+                return False
+            else:
+                print(f"Unexpected response returned from server")
+                return False
+        else:
+            print("Timeout waiting for ACK.")
             return False
-    except Exception as e:
-        print(f"Error: Unable to send message: {e}")
+    except (socket.error, json.JSONDecodeError) as e:
+        print(f"Failed to receive ACK: {e}")
         return False
+
+def run_client(target_ip, target_port, timeout):
+    """Main client logic."""
+    target_addr = (target_ip, target_port)
+    sock = create_socket()
+
+    user_message = input("Enter message to send: ")
+
+    # Generate a unique message ID
+    message_id = str(uuid.uuid4())
+
+    # Create the message as a JSON object
+    message_payload = json.dumps({
+        'message_id': message_id,
+        'content': user_message
+    })
+
+    while True:
+        send_message(sock, message_payload, target_addr)
+        print("Message sent, waiting for ACK...")
+
+        ack_received = receive_ack(sock, timeout, message_id)
+        if ack_received:
+            print("Received ACK from server.")
+            break
+        else:
+            print("Retransmitting message...")
+
+    sock.close()
+
 
 def main():
     args = parse_args()
-    HOST = str(args.ip)
-    PORT = args.port
-    TIMEOUT = time.sleep(args.timeout / 1000.0)  # Convert milliseconds to seconds
-
-    sock, connection = connect_to_server(HOST, PORT)
-    
-    try:
-        print("Enter message to send:")
-        while True:
-            message = input("")
-            if not message:
-                print("No message entered, exiting.")
-                break
-
-            while not send_message(sock, connection, message, TIMEOUT):
-                print("Retrying...")
-    except KeyboardInterrupt:
-        print("Exiting...")
-    finally:
-        sock.close()
+    run_client(args.ip, args.port, args.timeout)
 
 if __name__ == "__main__":
     main()
-
