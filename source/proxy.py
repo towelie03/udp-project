@@ -208,7 +208,7 @@ def main():
     shutdown_event = threading.Event()
 
     # Start the cleanup thread
-    cleanup_thread = threading.Thread(target=cleanup_mappings, args=(message_id_to_client, message_id_lock), daemon=True)
+    cleanup_thread = threading.Thread(target=cleanup_mappings, args=(message_id_to_client, message_id_lock,600,60,shutdown_event), daemon=True)
     cleanup_thread.start()
 
     print("Proxy server is running. Press Ctrl+C to stop.")

@@ -10,6 +10,7 @@ import ipaddress
 BUFFER_SIZE = 1024  # bytes
 MESSAGE_ID_TTL = 600  # Time-to-live for message IDs in seconds (e.g., 10 minutes)
 CLEANING_PERIOD = 60
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description='UDP Reliable Server')
