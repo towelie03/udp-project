@@ -27,6 +27,7 @@ def create_socket():
 def send_message(sock, message, addr):
     """Send a message to the specified address."""
     try:
+        print(addr)
         sock.sendto(message.encode(), addr)
         print(f"Message sent to {addr}")
     except socket.error as e:
@@ -59,7 +60,7 @@ def receive_ack(sock, timeout, message_id):
 
 def run_client(target_ip, target_port, timeout):
     """Main client logic."""
-    target_addr = (target_ip, target_port)
+    target_addr = (str(target_ip), target_port)
     sock = create_socket()
 
     user_message = input("Enter message to send: ")
