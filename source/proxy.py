@@ -128,8 +128,9 @@ def settings_menu(params, lock, shutdown_event):
     help_message_displayed = False
     while not shutdown_event.is_set():
         if not help_message_displayed:
-            print("Proxy server is running. Press q or Ctrl+C to stop.")
-            print("\nEnter 'e' to edit settings")
+            print("Proxy server is running.")
+            print("Enter 'e' to edit settings")
+            print("Enter 'q' or Ctrl+C to close server")
             help_message_displayed = True
 
         ready, _, _ = select.select([sys.stdin], [], [], 1.0)  # 1-second timeout
