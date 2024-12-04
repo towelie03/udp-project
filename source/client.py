@@ -32,7 +32,7 @@ def parse_args():
     )
 
     args = parser.parse_args()
-    
+
     if args.target_port < 1 or args.target_port > 65535:
         parser.error("Port numbers must be between 1 and 65535.")
 
@@ -119,7 +119,7 @@ def run_client(target_ip, target_port, timeout):
         else:
             print("Retransmitting message...")
 
-        retries+=1
+        retries += 1
     if retries == MAX_RETRIES:
         print(f"Failed to receive ACK after maximum {MAX_RETRIES} retries. Exiting.")
 

@@ -16,7 +16,10 @@ def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="UDP Reliable Server")
     parser.add_argument(
-        "--listen-ip", type=ipaddress.ip_address,required=True, help="IP address to bind the server."
+        "--listen-ip",
+        type=ipaddress.ip_address,
+        required=True,
+        help="IP address to bind the server.",
     )
     parser.add_argument(
         "--listen-port", type=int, required=True, help="Port number to listen on."
@@ -25,7 +28,7 @@ def parse_args():
     args.listen_ip = str(args.listen_ip)
     if args.listen_port < 1 or args.listen_port > 65535:
         parser.error("Port numbers must be between 1 and 65535.")
-        
+
     return args
 
 

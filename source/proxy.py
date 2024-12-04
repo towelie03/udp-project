@@ -73,12 +73,12 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
-    
+
     for arg_name in ["listen_port", "target_port"]:
         value = getattr(args, arg_name)
         if value < 1 or value > 65535:
             parser.error("Port numbers must be between 1 and 65535.")
-        
+
     # Validate drop and delay probabilities
     for arg_name in ["client_drop", "server_drop", "client_delay", "server_delay"]:
         value = getattr(args, arg_name)
@@ -122,18 +122,22 @@ def parse_delay_time(delay_time_str, arg_name):
         raise ValueError(f"Invalid value for {arg_name}: {e}")
 
 
-def settings_menu(params, lock):
+def settings_menu(params, lock, shutdown_event):
     """Interactive menu for changing proxy settings."""
-    while True:
-        print("\nPress 'e' to edit settings or 'q' to quit the menu.")
+    while not shutdown_event.is_set():
+        print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
         user_input = input().strip().lower()
 
         if user_input == "e":
             while True:
                 with lock:
                     print("\n--- Proxy Settings ---")
-                    print(f"1. Client Drop Chance (current: {params['client_drop']} percent)")
-                    print(f"2. Server Drop Chance (current: {params['server_drop']} percent)")
+                    print(
+                        f"1. Client Drop Chance (current: {params['client_drop']} percent)"
+                    )
+                    print(
+                        f"2. Server Drop Chance (current: {params['server_drop']} percent)"
+                    )
                     print(
                         f"3. Client Delay Chance (current: {params['client_delay']} percent)"
                     )
@@ -146,7 +150,7 @@ def settings_menu(params, lock):
                     print(
                         f"6. Server Delay Time (current: {params['server_delay_time'][0]*1000:.2f}-{params['server_delay_time'][1]*1000:.2f} ms)"
                     )
-                    print("Press 'q' to return to the main menu.")
+                    print("Enter 'q' to return to the main menu.")
 
                 choice = input("Choose an option (1-6): ").strip().lower()
                 if choice == "q":
@@ -424,7 +428,9 @@ def main():
     cleanup_thread.start()
 
     settings_thread = threading.Thread(
-        target=settings_menu, args=(proxy_params, param_lock), daemon=True
+        target=settings_menu,
+        args=(proxy_params, param_lock, shutdown_event),
+        daemon=True,
     )
     settings_thread.start()
 
