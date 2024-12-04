@@ -8,12 +8,38 @@ import ipaddress
 
 BUFFER_SIZE = 1024  # bytes
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Client-server application using UDP sockets over the network")
-    parser.add_argument('-i', '--target-ip', type=ipaddress.ip_address, help="Accepts the IP to connect to", required=True)
-    parser.add_argument('-p', '--target-port', type=int, required=True, help="Accepts the port to connect to")
-    parser.add_argument('-t', '--timeout', type=int, required=True, help="Timeout in seconds")
-    return parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description="Client-server application using UDP sockets over the network"
+    )
+    parser.add_argument(
+        "-i",
+        "--target-ip",
+        type=ipaddress.ip_address,
+        help="Accepts the IP to connect to",
+        required=True,
+    )
+    parser.add_argument(
+        "-p",
+        "--target-port",
+        type=int,
+        required=True,
+        help="Accepts the port to connect to",
+    )
+    parser.add_argument(
+        "-t", "--timeout", type=int, required=True, help="Timeout in seconds"
+    )
+
+    args = parser.parse_args()
+
+    if args.timeout <= 0:
+        parser.error(f"Argument --timeout must be a positive integer bigger than 0.")
+    if args.port < 1 or args.port > 65535:
+        parser.error("Port numbers must be between 1 and 65535.")
+
+    return args
+
 
 def create_socket():
     """Create a UDP socket."""
@@ -23,6 +49,7 @@ def create_socket():
     except socket.error as e:
         print(f"Failed to create socket: {e}")
         sys.exit(1)
+
 
 def send_message(sock, message, addr):
     """Send a message to the specified address."""
@@ -34,6 +61,7 @@ def send_message(sock, message, addr):
         print(f"Failed to send message: {e}")
         sys.exit(1)
 
+
 def receive_ack(sock, timeout, message_id):
     """Wait for an acknowledgment with a timeout using select."""
     try:
@@ -43,10 +71,15 @@ def receive_ack(sock, timeout, message_id):
             data, _ = sock.recvfrom(BUFFER_SIZE)
             ack_data = data.decode()
             ack_message = json.loads(ack_data)
-            if ack_message.get('status') == 'ACK' and ack_message.get('message_id') == message_id:
+            if (
+                ack_message.get("status") == "ACK"
+                and ack_message.get("message_id") == message_id
+            ):
                 return True
-            elif ack_message.get('status') == 'ACK':
-                print(f"Received ACK with incorrect message_id: {ack_message.get('message_id')}")
+            elif ack_message.get("status") == "ACK":
+                print(
+                    f"Received ACK with incorrect message_id: {ack_message.get('message_id')}"
+                )
                 return False
             else:
                 print(f"Unexpected response returned from server")
@@ -57,6 +90,7 @@ def receive_ack(sock, timeout, message_id):
     except (socket.error, json.JSONDecodeError) as e:
         print(f"Failed to receive ACK: {e}")
         return False
+
 
 def run_client(target_ip, target_port, timeout):
     """Main client logic."""
@@ -69,14 +103,11 @@ def run_client(target_ip, target_port, timeout):
     message_id = str(uuid.uuid4())
 
     # Create the message as a JSON object
-    message_payload = json.dumps({
-        'message_id': message_id,
-        'content': user_message
-    })
-    MAX_RETRIES = 5
+    message_payload = json.dumps({"message_id": message_id, "content": user_message})
+    MAX_RETRIES = 10
     retries = 0
-    
-    while retries<MAX_RETRIES:
+
+    while retries < MAX_RETRIES:
         send_message(sock, message_payload, target_addr)
         print("Message sent, waiting for ACK...")
 
@@ -86,17 +117,17 @@ def run_client(target_ip, target_port, timeout):
             break
         else:
             print("Retransmitting message...")
-            
+
     if retries == MAX_RETRIES:
         print("Failed to receive ACK after maximum retries. Exiting.")
-        
-        
+
     sock.close()
 
 
 def main():
     args = parse_args()
     run_client(args.target_ip, args.target_port, args.timeout)
+
 
 if __name__ == "__main__":
     main()
