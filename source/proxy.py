@@ -39,25 +39,25 @@ def parse_arguments():
         "--client-drop",
         type=float,
         default=0.0,
-        help="Drop chance (0% - 100%) for packets from the client.",
+        help="Drop chance (0 - 100 percent) for packets from the client.",
     )
     parser.add_argument(
         "--server-drop",
         type=float,
         default=0.0,
-        help="Drop chance (0% - 100%) for packets from the server.",
+        help="Drop chance (0 - 100 percent) for packets from the server.",
     )
     parser.add_argument(
         "--client-delay",
         type=float,
         default=0.0,
-        help="Delay chance (0% - 100%) for packets from the client.",
+        help="Delay chance (0 - 100 percent) for packets from the client.",
     )
     parser.add_argument(
         "--server-delay",
         type=float,
         default=0.0,
-        help="Delay chance (0% - 100%) for packets from the server.",
+        help="Delay chance (0 - 100 percent) for packets from the server.",
     )
     parser.add_argument(
         "--client-delay-time",
@@ -127,13 +127,13 @@ def settings_menu(params, lock):
             while True:
                 with lock:
                     print("\n--- Proxy Settings ---")
-                    print(f"1. Client Drop Chance (current: {params['client_drop']}%)")
-                    print(f"2. Server Drop Chance (current: {params['server_drop']}%)")
+                    print(f"1. Client Drop Chance (current: {params['client_drop']} percent)")
+                    print(f"2. Server Drop Chance (current: {params['server_drop']} percent)")
                     print(
-                        f"3. Client Delay Chance (current: {params['client_delay']}%)"
+                        f"3. Client Delay Chance (current: {params['client_delay']} percent)"
                     )
                     print(
-                        f"4. Server Delay Chance (current: {params['server_delay']}%)"
+                        f"4. Server Delay Chance (current: {params['server_delay']} percent)"
                     )
                     print(
                         f"5. Client Delay Time (current: {params['client_delay_time'][0]*1000:.2f}-{params['client_delay_time'][1]*1000:.2f} ms)"
