@@ -6,6 +6,7 @@ import sys
 import ipaddress
 import json
 import time
+import select
 from concurrent.futures import ThreadPoolExecutor
 
 BUFFER_SIZE = 4096  # bytes
@@ -125,8 +126,15 @@ def parse_delay_time(delay_time_str, arg_name):
 def settings_menu(params, lock, shutdown_event):
     """Interactive menu for changing proxy settings."""
     while not shutdown_event.is_set():
+        
         print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
-        user_input = input().strip().lower()
+        ready, _, _ = select.select([sys.stdin], [], [], 1.0)  # 1-second timeout
+        if ready:
+            user_input = sys.stdin.readline().strip().lower()  # Read the input
+        else:
+            if shutdown_event.is_set():
+                break  # Exit if shutdown is triggered
+            continue  # Timeout, go back to waiting
 
         if user_input == "e":
             while True:
