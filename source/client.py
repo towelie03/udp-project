@@ -35,7 +35,7 @@ def parse_args():
 
     if args.timeout <= 0:
         parser.error(f"Argument --timeout must be a positive integer bigger than 0.")
-    if args.port < 1 or args.port > 65535:
+    if args.target_port < 1 or args.target_port > 65535:
         parser.error("Port numbers must be between 1 and 65535.")
 
     return args
@@ -104,7 +104,7 @@ def run_client(target_ip, target_port, timeout):
 
     # Create the message as a JSON object
     message_payload = json.dumps({"message_id": message_id, "content": user_message})
-    MAX_RETRIES = 10
+    MAX_RETRIES = 5
     retries = 0
 
     while retries < MAX_RETRIES:
@@ -119,7 +119,7 @@ def run_client(target_ip, target_port, timeout):
             print("Retransmitting message...")
 
     if retries == MAX_RETRIES:
-        print("Failed to receive ACK after maximum retries. Exiting.")
+        print(f"Failed to receive ACK after maximum {MAX_RETRIES} retries. Exiting.")
 
     sock.close()
 
