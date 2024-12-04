@@ -103,7 +103,7 @@ def run_server(listen_ip, listen_port, shutdown_event):
                     message_ids = client_messages.setdefault(client_addr, [])
 
                     if not any(msg_id == message_id for msg_id, _ in message_ids):
-                        print(f"Received new message from {client_addr}: {content}")
+                        print(f"Received new message from {client_addr}: \n>{content}")
                         message_ids.append((message_id, time.time()))
                     else:
                         print(
