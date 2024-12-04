@@ -130,7 +130,7 @@ def settings_menu(params, lock, shutdown_event):
         if not help_message_displayed:
             print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
             help_message_displayed = True
-            
+
         ready, _, _ = select.select([sys.stdin], [], [], 1.0)  # 1-second timeout
         if ready:
             user_input = sys.stdin.readline().strip().lower()  # Read the input
