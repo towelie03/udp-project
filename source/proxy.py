@@ -342,9 +342,6 @@ def handle_server_packet(
             print(
                 f"Forwarded message_id {message_id} from server to client {client_address}"
             )
-            # Remove the mapping after forwarding
-            with message_id_lock:
-                del message_id_to_client[message_id]
         except socket.error as e:
             print(f"Error forwarding to client {client_address}: {e}")
     else:
