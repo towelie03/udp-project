@@ -128,7 +128,8 @@ def settings_menu(params, lock, shutdown_event):
     help_message_displayed = False
     while not shutdown_event.is_set():
         if not help_message_displayed:
-            print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
+            print("Proxy server is running. Press q or Ctrl+C to stop.")
+            print("\nEnter 'e' to edit settings")
             help_message_displayed = True
 
         ready, _, _ = select.select([sys.stdin], [], [], 1.0)  # 1-second timeout
@@ -207,8 +208,7 @@ def settings_menu(params, lock, shutdown_event):
                 else:
                     print("Invalid option.")
         elif user_input == "q":
-            print("Exiting the menu.")
-            print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
+            shutdown_event.set()
             break
 
 
@@ -447,8 +447,6 @@ def main():
     )
     settings_thread.start()
 
-    print("Proxy server is running. Press Ctrl+C to stop.")
-
     # Initialize ThreadPoolExecutor for managing worker threads
     with ThreadPoolExecutor(max_workers=100) as executor:
         try:
@@ -477,8 +475,8 @@ def main():
         except KeyboardInterrupt:
             print("\nKeyboard interrupt received. Shutting down proxy...")
             shutdown_event.set()
-            proxy_socket.close()  # This will unblock recvfrom
         finally:
+            proxy_socket.close()  
             # Wait for all worker threads to finish
             executor.shutdown(wait=True)
             print("All worker threads have been terminated.")
