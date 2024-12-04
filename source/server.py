@@ -21,7 +21,12 @@ def parse_args():
     parser.add_argument(
         "--listen-port", type=int, required=True, help="Port number to listen on."
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    
+    if args.listen_port < 1 or args.listen_port > 65535:
+        parser.error("Port numbers must be between 1 and 65535.")
+        
+    return args
 
 
 def create_socket(listen_ip, listen_port):
