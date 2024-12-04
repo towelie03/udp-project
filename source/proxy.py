@@ -75,7 +75,7 @@ def parse_arguments():
     args = parser.parse_args()
     
     for arg_name in ["listen_port", "target_port"]:
-        if arg_name < 1 or arg_name > 65535:
+        if args.arg_name < 1 or args.arg_name > 65535:
             parser.error("Port numbers must be between 1 and 65535.")
         
     # Validate drop and delay probabilities
