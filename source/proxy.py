@@ -125,9 +125,12 @@ def parse_delay_time(delay_time_str, arg_name):
 
 def settings_menu(params, lock, shutdown_event):
     """Interactive menu for changing proxy settings."""
-    print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
+    help_message_displayed = False
     while not shutdown_event.is_set():
-        
+        if not help_message_displayed:
+            print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
+            help_message_displayed = True
+            
         ready, _, _ = select.select([sys.stdin], [], [], 1.0)  # 1-second timeout
         if ready:
             user_input = sys.stdin.readline().strip().lower()  # Read the input
@@ -137,6 +140,7 @@ def settings_menu(params, lock, shutdown_event):
             continue  # Timeout, go back to waiting
 
         if user_input == "e":
+            help_message_displayed = False
             while True:
                 with lock:
                     print("\n--- Proxy Settings ---")
@@ -204,6 +208,7 @@ def settings_menu(params, lock, shutdown_event):
                     print("Invalid option.")
         elif user_input == "q":
             print("Exiting the menu.")
+            print("\nEnter 'e' to edit settings or 'q' to quit the menu.")
             break
 
 
