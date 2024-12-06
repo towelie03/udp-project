@@ -281,7 +281,7 @@ def handle_client_packet(
     simulate_delay(client_delay, client_delay_time, client_address)
 
     # Parse the packet to extract message_id
-    message_id = parse_packet(data, client_address, role="client")
+    message_id = parse_packet(data, client_address)
     if not message_id:
         return
 
@@ -323,7 +323,7 @@ def handle_server_packet(
     simulate_delay(server_delay, server_delay_time, server_address)
 
     # Parse the packet to extract message_id
-    message_id = parse_packet(data, server_address, role="server")
+    message_id = parse_packet(data, server_address)
     if not message_id:
         return
 
