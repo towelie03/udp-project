@@ -241,7 +241,7 @@ def simulate_delay(probability, delay_time_range, addr):
     return 0
 
 
-def parse_packet(data, addr, role="client"):
+def parse_packet(data, addr):
     """
     Parse the incoming packet.
     Returns the message_id if valid, else None.
