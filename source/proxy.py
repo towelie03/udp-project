@@ -337,7 +337,6 @@ def handle_server_packet(
 
     if client_address:
         # Forward the packet to the client
-        print(f'number2 should have port and addr: {client_address}')
         try:
             proxy_socket.sendto(data, client_address)
             print(
@@ -362,9 +361,7 @@ def handle_packet(
     message_id_lock,
 ):
     """Determine packet source and handle accordingly."""
-
-    print(addr)
-    print(server_address)
+    
     if addr == server_address:
         handle_server_packet(
             data,
