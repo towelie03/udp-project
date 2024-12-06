@@ -55,7 +55,6 @@ def create_socket():
 def send_message(sock, message, addr):
     """Send a message to the specified address."""
     try:
-        print(addr)
         sock.sendto(message.encode(), addr)
         print(f"Message sent to {addr}")
     except socket.error as e:
